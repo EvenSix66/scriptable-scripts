@@ -63,22 +63,58 @@ function text(stack, value, size, color, bold = false) {
   t.minimumScaleFactor = 0.6;
   return t;
 }
+// 全部在设备本地绘图，不下载图片或执行远程代码。
+function whaleIcon() {
+  const c = new DrawContext();
+  c.size = new Size(100, 72); c.opaque = false; c.respectScreenScale = true;
+  const p = new Path();
+  p.move(new Point(8, 42));
+  p.addCurve(new Point(64, 16), new Point(4, 7), new Point(43, 4));
+  p.addCurve(new Point(78, 27), new Point(70, 22), new Point(74, 26));
+  p.addCurve(new Point(98, 4), new Point(91, 26), new Point(96, 13));
+  p.addCurve(new Point(83, 14), new Point(88, 9), new Point(85, 10));
+  p.addCurve(new Point(70, 8), new Point(79, 8), new Point(74, 8));
+  p.addCurve(new Point(79, 34), new Point(71, 20), new Point(74, 30));
+  p.addCurve(new Point(29, 65), new Point(74, 64), new Point(49, 76));
+  p.addCurve(new Point(8, 42), new Point(15, 63), new Point(9, 53));
+  p.closeSubpath(); c.addPath(p); c.setFillColor(new Color(gold)); c.fillPath();
+  const mouth = new Path(); mouth.move(new Point(13, 47));
+  mouth.addCurve(new Point(48, 58), new Point(22, 35), new Point(36, 43));
+  mouth.addCurve(new Point(13, 47), new Point(34, 68), new Point(18, 60));
+  mouth.closeSubpath(); c.addPath(mouth); c.setFillColor(new Color('#252523')); c.fillPath();
+  c.setFillColor(new Color('#252523')); c.fillEllipse(new Rect(24, 29, 4, 4));
+  return c.getImage();
+}
+function goldBackground() {
+  const c = new DrawContext();
+  c.size = new Size(480, 480); c.opaque = true; c.respectScreenScale = true;
+  // 深炭色底，上部较亮，底部收暗。
+  for (let y = 0; y < 480; y++) {
+    const v = Math.round(39 - y / 480 * 19).toString(16).padStart(2, '0');
+    c.setFillColor(new Color('#' + v + v + v)); c.fillRect(new Rect(0, y, 480, 1));
+  }
+  function wave(offset, width, alpha) {
+    const p = new Path(); p.move(new Point(-30, 520 + offset));
+    p.addCurve(new Point(510, 345 + offset), new Point(170, 510 + offset), new Point(250, 370 + offset));
+    c.addPath(p); c.setStrokeColor(new Color('#E8BE73', alpha)); c.setLineWidth(width); c.strokePath();
+  }
+  // 多层半透明描边形成柔光，再用细线描出波浪边缘。
+  for (let i = 18; i > 0; i--) wave(0, i * 5, 0.012);
+  wave(0, 1.8, 0.95);
+  wave(19, 0.8, 0.40);
+  wave(39, 0.7, 0.20);
+  wave(-15, 0.6, 0.16);
+  return c.getImage();
+}
 function buildWidget(data, error) {
   const w = new ListWidget();
   w.setPadding(15, 15, 13, 15);
-  const bg = new LinearGradient();
-  bg.colors = [new Color('#292927'), new Color('#141414'), new Color('#332A1C')];
-  bg.locations = [0, 0.68, 1];
-  bg.startPoint = new Point(0, 0);
-  bg.endPoint = new Point(1, 1);
-  w.backgroundGradient = bg;
+  w.backgroundImage = goldBackground();
   w.refreshAfterDate = new Date(Date.now() + CACHE_MINUTES * 60000);
   const header = w.addStack();
   header.centerAlignContent();
-  const icon = SFSymbol.named('sparkles');
-  const im = header.addImage(icon.image);
-  im.imageSize = new Size(17, 17);
-  im.tintColor = new Color(gold);
+  const im = header.addImage(whaleIcon());
+  im.imageSize = new Size(27, 20);
   header.addSpacer(6);
   text(header, 'DeepSeek', 16, gold, true);
   w.addSpacer(9);
