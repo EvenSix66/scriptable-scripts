@@ -28,3 +28,7 @@ MiniMax 优先使用 general 文本额度，缺少明确的剩余百分比时显
 ## Codex（实验性）
 
 Codex用量.js 使用 ChatGPT 客户端内部 GET /backend-api/wham/usage 接口；非公开稳定 REST API。仅支持手机本地输入自己的 Access Token 与可选 Account ID，钥匙串保存。不是 Session Cookie 登录，不支持设备码或自动续期。凭证仅发送至 chatgpt.com。缺失字段不当作零；额度窗口按实际时长标注，不显示未经确认的每日 Token。首次需手动运行配置，过期后在详情更新。未用真实账号完成端到端验证。
+
+## Codex 宽屏
+
+Codex用量宽屏.js 用于中号组件，复用 Codex用量.js 的钥匙串凭证。左侧按实际时长展示两个额度窗口，右侧显示可用重置次数。先读取 usage 响应的 rate_limit_reset_credits.available_count，缺失时只读请求 /backend-api/wham/rate-limit-reset-credits；缺失或失败显示未提供。不会兑换或消耗重置机会。采用独立的五分钟缓存与浅绿灰波纹背景。
