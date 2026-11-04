@@ -80,9 +80,9 @@ function bar(p) {
   c.setFillColor(new Color('#202020'));c.fillRect(new Rect(0,0,260*p/100,8));return c.getImage();
 }
 function row(w,d,title) {
-  const r=w.addStack();txt(r,duration(d,title),10,'#737373');r.addSpacer();txt(r,d?d.remaining.toFixed(0)+'% 剩余':'未提供',11,'#202020',true);
-  w.addSpacer(4);if(d){const im=w.addImage(bar(d.remaining));im.imageSize=new Size(125,4);im.resizable=true;}
-  w.addSpacer(3);txt(w,reset(d),8,'#888888');
+  const r=w.addStack();txt(r,duration(d,title),13,'#737373');r.addSpacer();txt(r,d?d.remaining.toFixed(0)+'% 剩余':'未提供',18,'#202020',true);
+  w.addSpacer(4);if(d){const im=w.addImage(bar(d.remaining));im.imageSize=new Size(145,5);im.resizable=true;}
+  w.addSpacer(3);txt(w,reset(d),11,'#888888');
 }
 function wideBackground() {
   const c=new DrawContext();c.size=new Size(1000,480);c.opaque=true;c.respectScreenScale=true;
@@ -97,22 +97,22 @@ function wideBackground() {
   return c.getImage();
 }
 function widget(d,error) {
-  const w=new ListWidget();w.setPadding(14,16,12,16);w.backgroundImage=wideBackground();w.refreshAfterDate=new Date(Date.now()+300000);
-  const head=w.addStack();head.centerAlignContent();txt(head,'>_ Codex',18,'#202A26',true);head.addSpacer();txt(head,d?d.plan.toUpperCase():'CHATGPT PLAN',9,'#728078');
-  w.addSpacer(10);
+  const w=new ListWidget();w.setPadding(12,14,10,14);w.backgroundImage=wideBackground();w.refreshAfterDate=new Date(Date.now()+300000);
+  const head=w.addStack();head.centerAlignContent();txt(head,'>_ Codex',20,'#202A26',true);head.addSpacer();txt(head,d?d.plan.toUpperCase():'CHATGPT PLAN',11,'#728078');
+  w.addSpacer(6);
   if(d){
     const body=w.addStack();body.centerAlignContent();
     const left=body.addStack();left.layoutVertically();
-    row(left,d.primary,'主窗口');left.addSpacer(8);row(left,d.secondary,'次窗口');
-    body.addSpacer(16);
+    row(left,d.primary,'主窗口');left.addSpacer(6);row(left,d.secondary,'次窗口');
+    body.addSpacer(12);
     const divider=body.addStack();divider.size=new Size(1,78);divider.backgroundColor=new Color('#CAD7D0');
-    body.addSpacer(16);
+    body.addSpacer(12);
     const right=body.addStack();right.layoutVertically();
-    txt(right,'可用重置机会',10,'#64796F');right.addSpacer(2);
-    txt(right,d.resets===null?'—':String(d.resets),36,'#244D3C',true);
-    right.addSpacer(2);txt(right,d.resets===null?'接口未提供':'次 · 仅显示',9,'#728078');
+    txt(right,'可用重置机会',12,'#64796F');right.addSpacer(2);
+    txt(right,d.resets===null?'—':String(d.resets),40,'#244D3C',true);
+    right.addSpacer(2);txt(right,d.resets===null?'接口未提供':'次 · 仅显示',11,'#728078');
     w.addSpacer();
-    const df=new DateFormatter();df.dateFormat='MM-dd HH:mm';txt(w,(error?'刷新失败 · ':'更新于 ')+df.string(new Date(d.time)),8,'#7B8780');
+    const df=new DateFormatter();df.dateFormat='MM-dd HH:mm';txt(w,(error?'刷新失败 · ':'更新于 ')+df.string(new Date(d.time)),10,'#7B8780');
   }else {w.addSpacer();txt(w,Keychain.contains(TOKEN_KEY)?'查询失败，点击查看详情':'请先运行脚本配置凭证',11,'#737373');w.addSpacer();}
   return w;
 }
