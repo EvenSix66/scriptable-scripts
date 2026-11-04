@@ -1,20 +1,20 @@
 // Variables used by Scriptable.
 // icon-color: yellow; icon-glyph: wallet;
-// DeepSeek 黑金余额组件。仅请求官方余额接口，无外部依赖。
+// DeepSeek 蓝白余额组件。仅请求官方余额接口，无外部依赖。
 const KEY = 'deepseek_api_key';
 const CACHE_MINUTES = 5;
 const fm = FileManager.local();
 const cacheFile = fm.joinPath(fm.documentsDirectory(), 'deepseek_gold_balance.json');
-const gold = '#E9CC92';
-const muted = '#B7AA93';
-const logoFile = fm.joinPath(fm.documentsDirectory(), 'deepseek_official_gold_v2.png');
+const gold = '#4D6BFE';
+const muted = '#79849C';
+const logoFile = fm.joinPath(fm.documentsDirectory(), 'deepseek_official_blue_v1.png');
 let logoError = '';
 async function loadOfficialLogo() {
   if (fm.fileExists(logoFile)) {
     try { return fm.readImage(logoFile); } catch (_) { fm.remove(logoFile); }
   }
   try {
-    const req = new Request('https://raw.githubusercontent.com/EvenSix66/scriptable-scripts/main/assets/deepseek-gold.png');
+    const req = new Request('https://raw.githubusercontent.com/EvenSix66/scriptable-scripts/main/assets/deepseek-blue.png');
     req.timeoutInterval = 20;
     const image = await req.loadImage();
     if (!req.response || req.response.statusCode !== 200) throw new Error('HTTP error');
@@ -83,24 +83,13 @@ function text(stack, value, size, color, bold = false) {
 }
 // 全部在设备本地绘图，不下载图片或执行远程代码。
 function goldBackground() {
-  const c = new DrawContext();
-  c.size = new Size(480, 480); c.opaque = true; c.respectScreenScale = true;
-  // 深炭色底，上部较亮，底部收暗。
-  for (let y = 0; y < 480; y++) {
-    const v = Math.round(39 - y / 480 * 19).toString(16).padStart(2, '0');
-    c.setFillColor(new Color('#' + v + v + v)); c.fillRect(new Rect(0, y, 480, 1));
-  }
-  function wave(offset, width, alpha) {
-    const p = new Path(); p.move(new Point(-30, 520 + offset));
-    p.addCurve(new Point(510, 345 + offset), new Point(170, 510 + offset), new Point(250, 370 + offset));
-    c.addPath(p); c.setStrokeColor(new Color('#E8BE73', alpha)); c.setLineWidth(width); c.strokePath();
-  }
-  // 多层半透明描边形成柔光，再用细线描出波浪边缘。
-  for (let i = 18; i > 0; i--) wave(0, i * 5, 0.012);
-  wave(0, 1.8, 0.95);
-  wave(19, 0.8, 0.40);
-  wave(39, 0.7, 0.20);
-  wave(-15, 0.6, 0.16);
+  const c = new DrawContext(); c.size = new Size(480, 480);
+  c.opaque = true; c.respectScreenScale = true;
+  c.setFillColor(new Color('#F8FAFF')); c.fillRect(new Rect(0,0,480,480));
+  c.setFillColor(new Color('#4D6BFE', 0.05)); c.fillEllipse(new Rect(220,290,420,300));
+  const p = new Path(); p.move(new Point(-30,490));
+  p.addCurve(new Point(510,365),new Point(190,480),new Point(270,380));
+  c.addPath(p); c.setStrokeColor(new Color('#4D6BFE',0.18)); c.setLineWidth(1.5); c.strokePath();
   return c.getImage();
 }
 function buildWidget(data, error, logo) {
@@ -127,12 +116,12 @@ function buildWidget(data, error, logo) {
     const left = row.addStack(); left.layoutVertically();
     text(left, '充值', 9, muted);
     left.addSpacer(2);
-    text(left, money(b.topup, b.currency), 13, '#F0E7D5', true);
+    text(left, money(b.topup, b.currency), 13, '#283B70', true);
     row.addSpacer();
     const right = row.addStack(); right.layoutVertically();
     text(right, '赠送', 9, muted);
     right.addSpacer(2);
-    text(right, money(b.grant, b.currency), 13, '#F0E7D5', true);
+    text(right, money(b.grant, b.currency), 13, '#283B70', true);
     w.addSpacer(9);
     const df = new DateFormatter(); df.dateFormat = 'MM-dd HH:mm';
     const label = error ? '离线 · ' : data.available ? '更新于 ' : '账户不可用 · ';

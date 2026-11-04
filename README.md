@@ -1,23 +1,26 @@
-# DeepSeek 黑金余额小组件
+# AI 额度桌面小组件
 
-适用于 iPhone Scriptable 的小号方形桌面组件。
+适用于 iPhone Scriptable 小号方形组件，无需自己的服务器。
+
+- DeepSeek余额.js：蓝白主题，官方鲸鱼图标，显示可用、充值及赠送余额。
+- MiniMax订阅.js：橙红与暖白主题，国内 minimax.cn 订阅，显示文本模型 5 小时／每周剩余额度和重置时间。
 
 ## 安装
 
-1. 将 DeepSeek余额.js 导入 Scriptable。
-2. 在 App 内运行一次，输入 DeepSeek API Key。
-3. 添加 Scriptable 小号桌面组件，Script 选择此脚本，点击动作选择 Run Script。
+将脚本导入 Scriptable，在 App 内运行并输入各自的 Key。添加 Scriptable 小号桌面组件，选择对应脚本，点击动作选择 Run Script。
 
-## 数据与隐私
+DeepSeek 和 MiniMax 的密钥分别保存在钥匙串，不随脚本上传，也不写入缓存。不要把密钥写进 GitHub。
 
-- 仅请求 https://api.deepseek.com/user/balance，无第三方依赖或统计。
-- 密钥保存在 Scriptable Keychain，不包含在源码或余额缓存中。
-- 显示可用、充值及赠送余额，不统计每日 Token 或消费。
-- 默认缓存五分钟，实际桌面刷新由 iOS 调度。
-- 请求失败时显示缓存及离线标记，时间为实际数据获取时间。
-- 在 App 中运行可查看详情或更换密钥。
+## 网络与缓存
 
-尚未完成 iPhone 真机布局验证。
+DeepSeek 仅向 api.deepseek.com/user/balance 发送认证请求。官方鲸鱼从 DeepSeek 官方 SVG 路径转换成蓝色 PNG，首次从本仓库 assets 下载，下载不携带密钥，并长期本地缓存。失败会在 App 详情中提示。
 
-图标来自 DeepSeek 官方 SVG 的鲸鱼路径，预先转换为金色 PNG 并存于本仓库 assets。手机首次下载后长期本地缓存；不再使用 WebView 转换或手绘回退。失败会在 App 详情中提示。
+MiniMax 仅向 https://www.minimax.cn/v1/token_plan/remains 发送订阅 Key。不调用模型、不发送提示词。界面文字标识不下载第三方图片。
 
+数据缓存五分钟，实际刷新由 iOS 调度，显示实际获取时间。离线保留缓存，不把旧额度自动重置为满额。
+
+MiniMax 优先使用 general 文本额度，缺少明确的剩余百分比时显示“未提供”，不从含义不清的 usage_count 推算。接口响应可在 App 详情中本地查看，不含请求头。未统计每日原始 Token 或人民币消费。
+
+## 验证
+
+已通过 JavaScript 语法检查及 MiniMax 额度解析样本检查。未进行 iPhone 真机视觉验证，也未用真实订阅 Key 验证账号返回数据。
