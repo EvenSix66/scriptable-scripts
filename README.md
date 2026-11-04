@@ -19,4 +19,5 @@
 
 尚未完成 iPhone 真机布局验证。
 
-图标首次从 DeepSeek 官方 GitHub 下载，仅提取鲸鱼路径并在本地转为金色 PNG，长期缓存于 Scriptable 本地目录。下载不携带 API Key。删除 deepseek_official_gold_v1.png 后会重新下载；失败时使用绘制图标。
+图标来自 DeepSeek 官方 SVG 的鲸鱼路径，预先转换为金色 PNG 并存于本仓库 assets。手机首次下载后长期本地缓存；不再使用 WebView 转换或手绘回退。失败会在 App 详情中提示。
+

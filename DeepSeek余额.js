@@ -7,40 +7,23 @@ const fm = FileManager.local();
 const cacheFile = fm.joinPath(fm.documentsDirectory(), 'deepseek_gold_balance.json');
 const gold = '#E9CC92';
 const muted = '#B7AA93';
-const logoFile = fm.joinPath(fm.documentsDirectory(), 'deepseek_official_gold_v1.png');
-// 只获取官方静态 SVG；不携带余额接口的认证请求头。
+const logoFile = fm.joinPath(fm.documentsDirectory(), 'deepseek_official_gold_v2.png');
+let logoError = '';
 async function loadOfficialLogo() {
   if (fm.fileExists(logoFile)) {
     try { return fm.readImage(logoFile); } catch (_) { fm.remove(logoFile); }
   }
   try {
-    const req = new Request('https://raw.githubusercontent.com/deepseek-ai/DeepSeek-LLM/main/images/logo.svg');
-    req.timeoutInterval = 12;
-    const source = await req.loadString();
-    if (!req.response || req.response.statusCode !== 200) throw new Error('Logo download failed');
-    // 官方组合标识最后一个 path 是鲸鱼。仅提取合法路径数字，不加载 SVG 内的脚本或外部资源。
-    const paths = [...source.matchAll(/<path\b[^>]*\bd="([^"]+)"/g)];
-    const d = paths.length ? paths[paths.length - 1][1] : '';
-    if (!d || d.length > 30000 || !/^[MmLlHhVvCcSsQqTtAaZz0-9.,\s+eE-]+$/.test(d)) throw new Error('Invalid logo path');
-    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="224" height="168" viewBox="0 0 57 42"><path fill="' + gold + '" d="' + d + '"/></svg>';
-    const web = new WebView();
-    await web.loadHTML('<html><body></body></html>');
-    const png = await web.evaluateJavaScript(`
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = 224; canvas.height = 168;
-        canvas.getContext('2d').drawImage(img, 0, 0, 224, 168);
-        completion(canvas.toDataURL('image/png').split(',')[1]);
-      };
-      img.onerror = () => completion('');
-      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(${JSON.stringify(svg)});
-    `, true);
-    if (!png) throw new Error('Logo conversion failed');
-    const image = Image.fromData(Data.fromBase64String(png));
+    const req = new Request('https://raw.githubusercontent.com/EvenSix66/scriptable-scripts/main/assets/deepseek-gold.png');
+    req.timeoutInterval = 20;
+    const image = await req.loadImage();
+    if (!req.response || req.response.statusCode !== 200) throw new Error('HTTP error');
     fm.writeImage(logoFile, image);
     return image;
-  } catch (_) { return whaleIcon(); }
+  } catch (_) {
+    logoError = '官方图标下载失败，请检查 GitHub 网络';
+    return null;
+  }
 }
 
 function readCache() {
@@ -99,27 +82,6 @@ function text(stack, value, size, color, bold = false) {
   return t;
 }
 // 全部在设备本地绘图，不下载图片或执行远程代码。
-function whaleIcon() {
-  const c = new DrawContext();
-  c.size = new Size(100, 72); c.opaque = false; c.respectScreenScale = true;
-  const p = new Path();
-  p.move(new Point(8, 42));
-  p.addCurve(new Point(64, 16), new Point(4, 7), new Point(43, 4));
-  p.addCurve(new Point(78, 27), new Point(70, 22), new Point(74, 26));
-  p.addCurve(new Point(98, 4), new Point(91, 26), new Point(96, 13));
-  p.addCurve(new Point(83, 14), new Point(88, 9), new Point(85, 10));
-  p.addCurve(new Point(70, 8), new Point(79, 8), new Point(74, 8));
-  p.addCurve(new Point(79, 34), new Point(71, 20), new Point(74, 30));
-  p.addCurve(new Point(29, 65), new Point(74, 64), new Point(49, 76));
-  p.addCurve(new Point(8, 42), new Point(15, 63), new Point(9, 53));
-  p.closeSubpath(); c.addPath(p); c.setFillColor(new Color(gold)); c.fillPath();
-  const mouth = new Path(); mouth.move(new Point(13, 47));
-  mouth.addCurve(new Point(48, 58), new Point(22, 35), new Point(36, 43));
-  mouth.addCurve(new Point(13, 47), new Point(34, 68), new Point(18, 60));
-  mouth.closeSubpath(); c.addPath(mouth); c.setFillColor(new Color('#252523')); c.fillPath();
-  c.setFillColor(new Color('#252523')); c.fillEllipse(new Rect(24, 29, 4, 4));
-  return c.getImage();
-}
 function goldBackground() {
   const c = new DrawContext();
   c.size = new Size(480, 480); c.opaque = true; c.respectScreenScale = true;
@@ -148,9 +110,11 @@ function buildWidget(data, error, logo) {
   w.refreshAfterDate = new Date(Date.now() + CACHE_MINUTES * 60000);
   const header = w.addStack();
   header.centerAlignContent();
-  const im = header.addImage(logo);
-  im.imageSize = new Size(27, 20);
-  header.addSpacer(6);
+  if (logo) {
+    const im = header.addImage(logo);
+    im.imageSize = new Size(27, 20);
+    header.addSpacer(6);
+  }
   text(header, 'DeepSeek', 16, gold, true);
   w.addSpacer(9);
   text(w, '可用余额', 10, muted);
@@ -182,6 +146,7 @@ async function showDetails(data, error) {
   const a = new Alert();
   a.title = 'DeepSeek 账户余额';
   a.message = data ? data.balances.map(b => `${b.currency}\n可用：${money(b.total,b.currency)}\n充值：${money(b.topup,b.currency)}\n赠送：${money(b.grant,b.currency)}`).join('\n\n') + '\n\n数据时间：' + new Date(data.time).toLocaleString() + (error ? '\n刷新失败，以上为缓存数据。' : '') : '暂时无法查询余额，请检查网络或密钥。';
+  if (logoError) a.message += '\n\n' + logoError;
   a.addAction('更换 API Key');
   a.addCancelAction('完成');
   if (await a.present() === 0) await configure();
