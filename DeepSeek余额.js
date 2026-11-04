@@ -7,6 +7,41 @@ const fm = FileManager.local();
 const cacheFile = fm.joinPath(fm.documentsDirectory(), 'deepseek_gold_balance.json');
 const gold = '#E9CC92';
 const muted = '#B7AA93';
+const logoFile = fm.joinPath(fm.documentsDirectory(), 'deepseek_official_gold_v1.png');
+// 只获取官方静态 SVG；不携带余额接口的认证请求头。
+async function loadOfficialLogo() {
+  if (fm.fileExists(logoFile)) {
+    try { return fm.readImage(logoFile); } catch (_) { fm.remove(logoFile); }
+  }
+  try {
+    const req = new Request('https://raw.githubusercontent.com/deepseek-ai/DeepSeek-LLM/main/images/logo.svg');
+    req.timeoutInterval = 12;
+    const source = await req.loadString();
+    if (!req.response || req.response.statusCode !== 200) throw new Error('Logo download failed');
+    // 官方组合标识最后一个 path 是鲸鱼。仅提取合法路径数字，不加载 SVG 内的脚本或外部资源。
+    const paths = [...source.matchAll(/<path\b[^>]*\bd="([^"]+)"/g)];
+    const d = paths.length ? paths[paths.length - 1][1] : '';
+    if (!d || d.length > 30000 || !/^[MmLlHhVvCcSsQqTtAaZz0-9.,\s+eE-]+$/.test(d)) throw new Error('Invalid logo path');
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="224" height="168" viewBox="0 0 57 42"><path fill="' + gold + '" d="' + d + '"/></svg>';
+    const web = new WebView();
+    await web.loadHTML('<html><body></body></html>');
+    const png = await web.evaluateJavaScript(`
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 224; canvas.height = 168;
+        canvas.getContext('2d').drawImage(img, 0, 0, 224, 168);
+        completion(canvas.toDataURL('image/png').split(',')[1]);
+      };
+      img.onerror = () => completion('');
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(${JSON.stringify(svg)});
+    `, true);
+    if (!png) throw new Error('Logo conversion failed');
+    const image = Image.fromData(Data.fromBase64String(png));
+    fm.writeImage(logoFile, image);
+    return image;
+  } catch (_) { return whaleIcon(); }
+}
 
 function readCache() {
   try {
@@ -106,14 +141,14 @@ function goldBackground() {
   wave(-15, 0.6, 0.16);
   return c.getImage();
 }
-function buildWidget(data, error) {
+function buildWidget(data, error, logo) {
   const w = new ListWidget();
   w.setPadding(15, 15, 13, 15);
   w.backgroundImage = goldBackground();
   w.refreshAfterDate = new Date(Date.now() + CACHE_MINUTES * 60000);
   const header = w.addStack();
   header.centerAlignContent();
-  const im = header.addImage(whaleIcon());
+  const im = header.addImage(logo);
   im.imageSize = new Size(27, 20);
   header.addSpacer(6);
   text(header, 'DeepSeek', 16, gold, true);
@@ -160,7 +195,8 @@ async function main() {
       try { data = await fetchBalance(); } catch (_) { error = true; }
     }
   } else { data = null; }
-  const w = buildWidget(data, error);
+  const logo = await loadOfficialLogo();
+  const w = buildWidget(data, error, logo);
   Script.setWidget(w);
   if (config.runsInApp) {
     await w.presentSmall();

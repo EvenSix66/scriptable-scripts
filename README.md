@@ -18,3 +18,5 @@
 - 在 App 中运行可查看详情或更换密钥。
 
 尚未完成 iPhone 真机布局验证。
+
+图标首次从 DeepSeek 官方 GitHub 下载，仅提取鲸鱼路径并在本地转为金色 PNG，长期缓存于 Scriptable 本地目录。下载不携带 API Key。删除 deepseek_official_gold_v1.png 后会重新下载；失败时使用绘制图标。
