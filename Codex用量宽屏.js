@@ -122,14 +122,12 @@ function widget(d,error) {
     body.addSpacer(12);
     const divider=body.addStack();divider.size=new Size(1,78);divider.backgroundColor=new Color('#CAD7D0');
     body.addSpacer(12);
-    const right=body.addStack();right.layoutVertically();right.size=new Size(0,100);
+    const right=body.addStack();right.layoutVertically();
     txt(right,'可用重置机会',12,'#64796F');right.addSpacer(2);
     txt(right,d.resets===null?'—':String(d.resets),32,'#244D3C',true);
     right.addSpacer(1);txt(right,d.resets===null?'接口未提供':'次 · 仅显示',10,'#728078');
-    right.addSpacer();txt(right,'TOKEN 到期',10,'#64796F');
-    right.addSpacer(2);txt(right,expiryLabel(),12,'#244D3C',true);
     w.addSpacer();
-    const df=new DateFormatter();df.dateFormat='MM-dd HH:mm';txt(w,(error?'刷新失败 · ':'更新于 ')+df.string(new Date(d.time))+' · v1.4',9,'#7B8780');
+    const df=new DateFormatter();df.dateFormat='MM-dd HH:mm';txt(w,(error?'刷新失败 · ':'更新于 ')+df.string(new Date(d.time))+' · v1.5 · 到期 '+expiryLabel(),9,'#7B8780');
   }else {w.addSpacer();txt(w,Keychain.contains(TOKEN_KEY)?'查询失败，点击查看详情':'请先运行脚本配置凭证',11,'#737373');w.addSpacer();}
   return w;
 }
