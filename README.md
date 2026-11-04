@@ -24,3 +24,7 @@ MiniMax 优先使用 general 文本额度，缺少明确的剩余百分比时显
 ## 验证
 
 已通过 JavaScript 语法检查及 MiniMax 额度解析样本检查。未进行 iPhone 真机视觉验证，也未用真实订阅 Key 验证账号返回数据。
+
+## Codex（实验性）
+
+Codex用量.js 使用 ChatGPT 客户端内部 GET /backend-api/wham/usage 接口；非公开稳定 REST API。仅支持手机本地输入自己的 Access Token 与可选 Account ID，钥匙串保存。不是 Session Cookie 登录，不支持设备码或自动续期。凭证仅发送至 chatgpt.com。缺失字段不当作零；额度窗口按实际时长标注，不显示未经确认的每日 Token。首次需手动运行配置，过期后在详情更新。未用真实账号完成端到端验证。
