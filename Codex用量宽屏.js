@@ -84,6 +84,21 @@ function row(w,d,title) {
   w.addSpacer(4);if(d){const im=w.addImage(bar(d.remaining));im.imageSize=new Size(145,5);im.resizable=true;}
   w.addSpacer(3);txt(w,reset(d),11,'#888888');
 }
+// JWT exp 仅为本地读取的声明，不验证签名，也不能判断提前撤销。
+function tokenExpiry(token) {
+  try {
+    const part=token.split('.')[1]; if(!part)return null;
+    let base=part.replace(/-/g,'+').replace(/_/g,'/');base+='='.repeat((4-base.length%4)%4);
+    const claims=JSON.parse(Data.fromBase64String(base).toRawString());
+    return typeof claims.exp==='number' && Number.isFinite(claims.exp) && claims.exp>0 ? claims.exp*1000 : null;
+  } catch(_){return null;}
+}
+function expiryLabel() {
+  const exp=Keychain.contains(TOKEN_KEY)?tokenExpiry(Keychain.get(TOKEN_KEY)):null;
+  if(!exp)return 'Token 到期未知';
+  if(exp<=Date.now())return 'Token 已到期';
+  const df=new DateFormatter();df.dateFormat='MM-dd HH:mm';return 'Token 到期 '+df.string(new Date(exp));
+}
 function wideBackground() {
   const c=new DrawContext();c.size=new Size(1000,480);c.opaque=true;c.respectScreenScale=true;
   c.setFillColor(new Color('#F7F9F8'));c.fillRect(new Rect(0,0,1000,480));
@@ -112,7 +127,7 @@ function widget(d,error) {
     txt(right,d.resets===null?'—':String(d.resets),40,'#244D3C',true);
     right.addSpacer(2);txt(right,d.resets===null?'接口未提供':'次 · 仅显示',11,'#728078');
     w.addSpacer();
-    const df=new DateFormatter();df.dateFormat='MM-dd HH:mm';txt(w,(error?'刷新失败 · ':'更新于 ')+df.string(new Date(d.time)),10,'#7B8780');
+    const df=new DateFormatter();df.dateFormat='MM-dd HH:mm';txt(w,(error?'刷新失败 · ':'更新于 ')+df.string(new Date(d.time))+' · '+expiryLabel(),9,'#7B8780');
   }else {w.addSpacer();txt(w,Keychain.contains(TOKEN_KEY)?'查询失败，点击查看详情':'请先运行脚本配置凭证',11,'#737373');w.addSpacer();}
   return w;
 }

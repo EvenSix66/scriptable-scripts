@@ -32,3 +32,5 @@ Codex用量.js 使用 ChatGPT 客户端内部 GET /backend-api/wham/usage 接口
 ## Codex 宽屏
 
 Codex用量宽屏.js 用于中号组件，复用 Codex用量.js 的钥匙串凭证。左侧按实际时长展示两个额度窗口，右侧显示可用重置次数。先读取 usage 响应的 rate_limit_reset_credits.available_count，缺失时只读请求 /backend-api/wham/rate-limit-reset-credits；缺失或失败显示未提供。不会兑换或消耗重置机会。采用独立的五分钟缓存与浅绿灰波纹背景。
+
+宽屏底部增加 JWT exp 声明的到期时间（手机本地时区），不验证 JWT 签名，不能判断提前撤销；无 exp 时显示未知。Codex获取凭证.js 可在同一 WebView 中由用户完成官方登录后读取当前会话，或手动导入 Token/会话 JSON。WebView 登录未真机验证，可能需要 Safari 手动导入。不会保证签发新 Token，不实现自动续期。
