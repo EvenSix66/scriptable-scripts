@@ -95,9 +95,9 @@ function tokenExpiry(token) {
 }
 function expiryLabel() {
   const exp=Keychain.contains(TOKEN_KEY)?tokenExpiry(Keychain.get(TOKEN_KEY)):null;
-  if(!exp)return 'Token 到期未知';
+  if(!exp)return '到期时间未知';
   if(exp<=Date.now())return 'Token 已到期';
-  const df=new DateFormatter();df.dateFormat='MM-dd HH:mm';return 'Token 到期 '+df.string(new Date(exp));
+  const df=new DateFormatter();df.dateFormat='MM-dd HH:mm';return df.string(new Date(exp));
 }
 function wideBackground() {
   const c=new DrawContext();c.size=new Size(1000,480);c.opaque=true;c.respectScreenScale=true;
@@ -124,10 +124,12 @@ function widget(d,error) {
     body.addSpacer(12);
     const right=body.addStack();right.layoutVertically();
     txt(right,'可用重置机会',12,'#64796F');right.addSpacer(2);
-    txt(right,d.resets===null?'—':String(d.resets),40,'#244D3C',true);
-    right.addSpacer(2);txt(right,d.resets===null?'接口未提供':'次 · 仅显示',11,'#728078');
+    txt(right,d.resets===null?'—':String(d.resets),32,'#244D3C',true);
+    right.addSpacer(1);txt(right,d.resets===null?'接口未提供':'次 · 仅显示',10,'#728078');
+    right.addSpacer(7);txt(right,'TOKEN 到期',10,'#64796F');
+    right.addSpacer(2);txt(right,expiryLabel(),12,'#244D3C',true);
     w.addSpacer();
-    const df=new DateFormatter();df.dateFormat='MM-dd HH:mm';txt(w,(error?'刷新失败 · ':'更新于 ')+df.string(new Date(d.time))+' · '+expiryLabel(),9,'#7B8780');
+    const df=new DateFormatter();df.dateFormat='MM-dd HH:mm';txt(w,(error?'刷新失败 · ':'更新于 ')+df.string(new Date(d.time))+' · v1.3',9,'#7B8780');
   }else {w.addSpacer();txt(w,Keychain.contains(TOKEN_KEY)?'查询失败，点击查看详情':'请先运行脚本配置凭证',11,'#737373');w.addSpacer();}
   return w;
 }
