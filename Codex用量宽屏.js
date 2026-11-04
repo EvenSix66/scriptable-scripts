@@ -122,12 +122,19 @@ function widget(d,error) {
     body.addSpacer(12);
     const divider=body.addStack();divider.size=new Size(1,78);divider.backgroundColor=new Color('#CAD7D0');
     body.addSpacer(12);
-    const right=body.addStack();right.layoutVertically();
-    txt(right,'可用重置机会',12,'#64796F');right.addSpacer(2);
-    txt(right,d.resets===null?'—':String(d.resets),32,'#244D3C',true);
-    right.addSpacer(1);txt(right,d.resets===null?'接口未提供':'次 · 仅显示',10,'#728078');
+    const right=body.addStack();right.layoutVertically();right.size=new Size(104,94);
+    function centered(value,size,color,bold=false){
+      const line=right.addStack();line.addSpacer();
+      const t=txt(line,value,size,color,bold);t.centerAlignText();
+      line.addSpacer();
+    }
+    right.addSpacer();
+    centered('可用重置机会',12,'#64796F');right.addSpacer(3);
+    centered(d.resets===null?'—':String(d.resets),38,'#244D3C',true);
+    right.addSpacer(2);centered(d.resets===null?'接口未提供':'次 · 仅显示',10,'#728078');
+    right.addSpacer();
     w.addSpacer();
-    const df=new DateFormatter();df.dateFormat='MM-dd HH:mm';txt(w,(error?'刷新失败 · ':'更新于 ')+df.string(new Date(d.time))+' · v1.5 · 到期 '+expiryLabel(),9,'#7B8780');
+    const df=new DateFormatter();df.dateFormat='MM-dd HH:mm';txt(w,(error?'刷新失败 · ':'更新于 ')+df.string(new Date(d.time))+' · v1.6 · 到期 '+expiryLabel(),9,'#7B8780');
   }else {w.addSpacer();txt(w,Keychain.contains(TOKEN_KEY)?'查询失败，点击查看详情':'请先运行脚本配置凭证',11,'#737373');w.addSpacer();}
   return w;
 }
