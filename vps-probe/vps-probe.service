@@ -1,0 +1,18 @@
+[Unit]
+Description=VPS resource history probe
+Requires=vps-probe.socket
+After=vps-probe.socket
+
+[Service]
+ExecStart=/opt/vps-probe/vps-probe
+DynamicUser=yes
+StateDirectory=vps-probe
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

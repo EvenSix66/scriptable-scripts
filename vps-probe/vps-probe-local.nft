@@ -1,0 +1,6 @@
+# Replace this documentation address with the IPv4 address clients will use.
+define probe_host = 192.0.2.10
+add table ip vps_probe_local
+flush table ip vps_probe_local
+add chain ip vps_probe_local output { type nat hook output priority -100; policy accept; }
+add rule ip vps_probe_local output ip daddr $probe_host tcp dport 18765 redirect to :18765
