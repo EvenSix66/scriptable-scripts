@@ -11,9 +11,9 @@ const cachePath = cache.joinPath(cache.cacheDirectory(), `vps-history-${cacheKey
 const previewThemePath = cache.joinPath(cache.documentsDirectory(), 'vps-preview-theme.txt')
 const small = config.widgetFamily === 'small'
 const metrics = [
-  { key: 'cpu', label: 'CPU', day: '#006A75', night: '#5DF9F2' },
-  { key: 'mem', label: '内存', day: '#A62168', night: '#FF79C9' },
-  { key: 'disk', label: '磁盘', day: '#795000', night: '#FFD671' },
+  { key: 'cpu', label: 'CPU', day: '#007B88', night: '#68DED8', ink: '#169BA4' },
+  { key: 'mem', label: '内存', day: '#7650B0', night: '#BC9BFA', ink: '#9A69D0' },
+  { key: 'disk', label: '磁盘', day: '#936317', night: '#F0C779', ink: '#B08032' },
 ]
 
 function valid(data) {
@@ -67,7 +67,7 @@ function widgetChart(points, seconds, width, height) {
   const inset = 3
   const plotWidth = width - 2 * inset
   const plotHeight = height - 2 * inset
-  context.setStrokeColor(new Color('#33435A'))
+  context.setStrokeColor(new Color('#8190AB', 0.34))
   context.setLineWidth(0.5)
   for (const value of [0, 25, 50, 75, 100]) {
     const y = inset + plotHeight * (1 - value / 100)
@@ -78,9 +78,10 @@ function widgetChart(points, seconds, width, height) {
     context.strokePath()
   }
   for (const metric of metrics) {
-    context.setStrokeColor(new Color(metric.night))
-    context.setFillColor(new Color(metric.night))
-    context.setLineWidth(1.65)
+    const color = new Color(selectedTheme === 'auto' ? metric.ink : metric[selectedTheme])
+    context.setStrokeColor(color)
+    context.setFillColor(color)
+    context.setLineWidth(1.55)
     const line = new Path()
     const vertices = series(points, seconds, metric.key, inset, inset, plotWidth, plotHeight)
     for (const p of vertices) {
@@ -119,95 +120,86 @@ function widgetText(parent, value, size, color, bold = false) {
 
 function buildWidget(points, seconds, status) {
   const widget = new ListWidget()
-  const gradient = new LinearGradient()
-  gradient.locations = [0, 1]
-  gradient.colors = [widgetColor('#FFFFFF', '#080C17'), widgetColor('#E5F8F5', '#1B1232')]
-  gradient.startPoint = new Point(0, 0)
-  gradient.endPoint = new Point(1, 1)
-  widget.backgroundGradient = gradient
-  widget.setPadding(10, 12, 9, 12)
+  widget.backgroundColor = widgetColor('#F7F8FC', '#101524')
+  widget.setPadding(12, 13, 11, 13)
   widget.refreshAfterDate = new Date(Date.now() + 15 * 60 * 1000)
   const header = widget.addStack()
   header.centerAlignContent()
-  widgetText(header, 'VPS 占用率', 14, widgetColor('#111C2C', '#F0F6FF'), true)
+  widgetText(header, 'VPS 占用率', 14, widgetColor('#172033', '#EEF2FC'), true)
   header.addSpacer()
-  widgetText(header, status, 9, widgetColor('#006A75', '#5DF9F2'), true)
-  widget.addSpacer(6)
+  widgetText(header, status, 9, widgetColor('#54647B', '#A7B3CC'))
+  widget.addSpacer(8)
   const latest = points.at(-1)
   if (!latest) {
-    widgetText(widget, endpoint ? '检查探针与分流规则' : '请填写探针 URL', 11, widgetColor('#43556C', '#A9BCD0'))
+    widgetText(widget, endpoint ? '检查探针与分流规则' : '请填写探针 URL', 11, widgetColor('#54647B', '#A7B3CC'))
     return widget
   }
 
   const values = widget.addStack()
-  for (const metric of metrics) {
-    if (metric !== metrics[0]) values.addSpacer()
-    const cell = values.addStack()
-    cell.layoutVertically()
-    widgetText(cell, metric.label, 9, widgetColor('#43556C', '#A9BCD0'))
-    widgetText(cell, `${Math.round(latest[metric.key])}%`, small ? 14 : 18, widgetColor(metric.day, metric.night), true)
-  }
-  widget.addSpacer(3)
-  const panel = widget.addStack()
-  panel.backgroundColor = new Color('#0B1423')
-  panel.cornerRadius = 5
-  panel.setPadding(2, 3, 2, 3)
-  panel.addSpacer()
-  const width = small ? 105 : 246
-  const height = small ? 38 : 40
-  panel.addImage(widgetChart(points, seconds, width, height)).imageSize = new Size(width, height)
-  panel.addSpacer()
-  widget.addSpacer(3)
-  widgetText(widget, `近 ${Math.round(seconds / 3600)} 小时 · ${timeLabel(latest.t)}`, 9, widgetColor('#43556C', '#A9BCD0'))
+  metrics.forEach((metric, index) => {
+    if (index > 0) values.addSpacer(small ? 4 : 13)
+    widgetText(values, `${metric.label} ${Math.round(latest[metric.key])}%`, small ? 9 : 11, widgetColor(metric.day, metric.night), true)
+  })
+  widget.addSpacer(6)
+  const width = small ? 110 : 258
+  const height = small ? 50 : 56
+  const chart = widget.addImage(widgetChart(points, seconds, width, height))
+  chart.imageSize = new Size(width, height)
+  widget.addSpacer(5)
+  widgetText(widget, `近 ${Math.round(seconds / 3600)} 小时 · ${timeLabel(latest.t)}`, 9, widgetColor('#54647B', '#A7B3CC'))
   return widget
 }
 
 function previewChart(points, seconds) {
   const grid = [0, 25, 50, 75, 100].map(value => {
-    const y = 12 + 124 * (1 - value / 100)
-    return `<line x1="35" y1="${y}" x2="348" y2="${y}"/><text x="29" y="${y + 3}" text-anchor="end">${value}%</text>`
+    const y = 14 + 145 * (1 - value / 100)
+    return `<line x1="36" y1="${y}" x2="345" y2="${y}"/><text x="29" y="${y + 3.5}" text-anchor="end">${value}%</text>`
   }).join('')
   const curves = metrics.map(({ key }) => {
-    const vertices = series(points, seconds, key, 35, 12, 313, 124)
+    const vertices = series(points, seconds, key, 36, 14, 309, 145)
     const path = vertices.map(p => `${p.linked ? 'L' : 'M'}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ')
     const last = vertices.at(-1)
     return `<g class="${key}"><path d="${path}"/><circle cx="${last.x.toFixed(2)}" cy="${last.y.toFixed(2)}" r="3"/></g>`
   }).join('')
-  return `<svg viewBox="0 0 360 150" role="img" aria-label="CPU、内存和磁盘占用率曲线"><g class="grid">${grid}</g>${curves}</svg>`
+  return `<svg viewBox="0 0 357 172" role="img" aria-label="CPU、内存和磁盘占用率曲线"><g class="grid">${grid}</g>${curves}</svg>`
 }
 
 function previewHTML(points, seconds, status, theme) {
   const latest = points.at(-1)
   const values = latest ? metrics.map(({ key, label }) => `
-    <div class="tile ${key}"><span>${label}</span><strong>${Math.round(latest[key])}<small>%</small></strong></div>`).join('') : ''
+    <div class="metric ${key}"><dt><i></i>${label}</dt><dd>${Math.round(latest[key])}<small>%</small></dd></div>`).join('') : ''
+  const tone = status === '在线' ? 'live' : status === '缓存' ? 'cached' : 'muted'
   const message = endpoint ? '请检查探针状态与 Surge 分流规则。' : '先在脚本顶部填写 defaultURL，或在主屏幕组件参数中填入探针地址。'
   return `<!doctype html><html lang="zh-CN" data-theme="${theme}"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark"><title>VPS 占用率</title><style>
-:root{color-scheme:light;--bg:#e6f2f2;--panel:#f7fbfb;--fg:#101b2e;--muted:#44596d;--line:#b6ced2;--cpu:#006a75;--mem:#a62168;--disk:#795000;--bloom:#d1eeed}
-:root[data-theme="night"]{color-scheme:dark;--bg:#080b16;--panel:#10182a;--fg:#f0f6ff;--muted:#a9bcd0;--line:#33435a;--cpu:#5df9f2;--mem:#ff79c9;--disk:#ffd671;--bloom:#21153b}
-@media(prefers-color-scheme:dark){:root[data-theme="auto"]{color-scheme:dark;--bg:#080b16;--panel:#10182a;--fg:#f0f6ff;--muted:#a9bcd0;--line:#33435a;--cpu:#5df9f2;--mem:#ff79c9;--disk:#ffd671;--bloom:#21153b}}
-*{box-sizing:border-box}body{margin:0;color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:radial-gradient(ellipse at 95% 0,var(--bloom),transparent 60%),var(--bg);min-height:100vh}
-main{max-width:600px;margin:auto;padding:30px max(18px,env(safe-area-inset-right)) 24px max(18px,env(safe-area-inset-left))}
-header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:0 0 19px;border-top:2px solid var(--cpu);padding-top:14px}
-h1{font-size:25px;letter-spacing:-.045em;margin:0}.theme{display:flex;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:3px}
-button{font:inherit;font-size:12px;font-weight:600;min-height:36px;border:0;border-radius:3px;padding:4px 10px;background:transparent;color:var(--muted)}
-button[aria-pressed=true]{color:var(--bg);background:var(--fg)}button:focus-visible{outline:2px solid var(--cpu);outline-offset:2px}
-.meta{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--muted);font-size:12px;margin:0 0 9px}
-.state{color:var(--cpu);font-weight:700}.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px}
+:root{color-scheme:light;--bg:#f1f3f9;--panel:#fcfcff;--fg:#172033;--muted:#53617b;--line:#dce2ef;--select:#e5ebf7;--cpu:#007b88;--mem:#7650b0;--disk:#936317}
+:root[data-theme="night"]{color-scheme:dark;--bg:#0c101c;--panel:#141a2b;--fg:#eef2fc;--muted:#a7b3cc;--line:#2a354d;--select:#28364d;--cpu:#68ded8;--mem:#bc9bfa;--disk:#f0c779}
+@media(prefers-color-scheme:dark){:root[data-theme="auto"]{color-scheme:dark;--bg:#0c101c;--panel:#141a2b;--fg:#eef2fc;--muted:#a7b3cc;--line:#2a354d;--select:#28364d;--cpu:#68ded8;--mem:#bc9bfa;--disk:#f0c779}}
+*{box-sizing:border-box}body{margin:0;color:var(--fg);font:15px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);min-height:100vh}
+main{max-width:640px;margin:auto;padding:max(28px,env(safe-area-inset-top)) max(17px,env(safe-area-inset-right)) 28px max(17px,env(safe-area-inset-left))}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:0 0 21px}
+h1{font-size:clamp(22px,6.8vw,29px);letter-spacing:-.06em;line-height:1.15;margin:0;font-weight:700}
+.theme{display:flex;align-items:center;gap:1px;padding:3px;background:var(--panel);border:1px solid var(--line);border-radius:11px}
+button{font:inherit;font-size:12px;font-weight:600;min-height:34px;border:0;border-radius:7px;padding:3px 8px;background:transparent;color:var(--muted)}
+button[aria-pressed=true]{color:var(--fg);background:var(--select)}button:focus-visible{outline:2px solid var(--cpu);outline-offset:1px}
+.plot,.empty{background:var(--panel);border:1px solid var(--line);border-radius:17px}.plot{padding:17px 13px 14px}
+.plot-head,.plot-foot{display:flex;align-items:center;justify-content:space-between;gap:10px}.plot-head{padding:0 4px}.plot-head h2{font-size:15px;margin:0;line-height:1.2}
+.state,.plot-foot,.time{color:var(--muted);font-size:12px}.state{display:inline-flex;align-items:center;gap:5px}.state::before{content:"";display:block;width:6px;height:6px;background:currentColor;border-radius:50%}
+.state.live{color:var(--cpu)}.state.cached{color:var(--disk)}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:14px 4px 12px;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .cpu{--accent:var(--cpu)}.mem{--accent:var(--mem)}.disk{--accent:var(--disk)}
-.tile,.plot,.empty{background:var(--panel);border:1px solid var(--line);border-radius:8px}
-.tile{padding:10px 9px 10px;border-top:2px solid var(--accent);overflow:hidden}.tile span{display:block;font-size:11px;color:var(--muted);font-weight:600}
-.tile strong{display:block;font:700 clamp(20px,7vw,34px)/1.16 ui-monospace,Menlo,monospace;color:var(--accent);letter-spacing:-.06em}.tile small{font-size:.53em;margin-left:1px}
-.plot{padding:12px 8px 8px}.plot svg{display:block;width:100%;height:auto;overflow:visible}.grid line{stroke:var(--line);stroke-width:.65;stroke-dasharray:3 4}
-.grid text{fill:var(--muted);font:9px ui-monospace,Menlo,monospace}path{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}circle{fill:var(--accent)}
-.axis{display:flex;justify-content:space-between;margin:0 1.5% 0 10%;font:11px ui-monospace,Menlo,monospace;color:var(--muted)}.empty{line-height:1.55;padding:16px;color:var(--muted)}
+.metric+.metric{border-left:1px solid var(--line);padding-left:clamp(9px,4vw,23px)}.metric dt{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.metric i{width:7px;height:7px;background:var(--accent);border-radius:50%}.metric dd{margin:3px 0 0;color:var(--fg);font-size:clamp(23px,7vw,34px);font-weight:650;line-height:1;letter-spacing:-.06em;font-variant-numeric:tabular-nums}
+.metric small{font-size:.52em;margin-left:2px;color:var(--muted);font-weight:600}
+.plot svg{display:block;width:100%;height:auto;overflow:visible}.grid line{stroke:var(--line);stroke-width:.7}.grid text{fill:var(--muted);font:10px -apple-system,"Segoe UI",sans-serif}
+path{fill:none;stroke:var(--accent);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}circle{fill:var(--accent);stroke:var(--panel);stroke-width:1}
+.plot-foot{margin:0 3.3% 0 10%;font-variant-numeric:tabular-nums}.empty{padding:19px;color:var(--muted);line-height:1.55}.empty p{margin:8px 0 0}
 </style></head><body><main>
 <header><h1>VPS 占用率</h1><nav class="theme" aria-label="显示主题">
 <button type="button" data-mode="auto">自动</button><button type="button" data-mode="day">日间</button><button type="button" data-mode="night">夜间</button>
 </nav></header>
-<div class="meta"><span class="state">${status}</span>${latest ? `<span>采样于 ${timeLabel(latest.t)}</span>` : ''}</div>
-${latest ? `<div class="cards">${values}</div><section class="plot">${previewChart(points, seconds)}<div class="axis"><span>−${Math.round(seconds / 3600)} 小时</span><span>${timeLabel(latest.t)}</span></div></section>` : `<div class="empty">${message}</div>`}
+${latest ? `<section class="plot"><div class="plot-head"><h2>占用趋势</h2><span class="state ${tone}">${status}</span></div><dl class="metrics">${values}</dl>${previewChart(points, seconds)}<div class="plot-foot"><span>近 ${Math.round(seconds / 3600)} 小时</span><span>采样于 ${timeLabel(latest.t)}</span></div></section>` : `<div class="empty"><span class="state ${tone}">${status}</span><p>${message}</p></div>`}
 </main><script>
 const controls = Array.from(document.querySelectorAll('button[data-mode]'))
 const setTheme = mode => {
